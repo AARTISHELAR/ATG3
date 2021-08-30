@@ -3,7 +3,9 @@ import json
 from bs4 import BeautifulSoup
 from django.utils.dateparse import parse_date
 from home.models import post
+from django.contrib.auth.models import Group
 import logging
+from home.models import  intresting_url,unintresting_url
 
 
 def get_soup(url):
@@ -82,7 +84,7 @@ def get_ld_json1(url):
         return data
     
 
-def store_data(data):
+def store_data(data,group):
     logging.info('start to store data...')
     #title
     title = data['title']
@@ -115,8 +117,31 @@ def store_data(data):
     logging.info('dateposted')
     datePosted = parse_date(data["datePosted"])
     logging.info('save the post')
-    p = post(title = title,company = company,address=address,validthrough=validthrough,datePosted=datePosted)
+    p = post(title = title,company = company,address=address,validthrough=validthrough,datePosted=datePosted,category=group)
     p.save()
+
+def iterate_links(links,group):
+    for url in links:
+        data = get_ld_json1(url)
+        print(isinstance(data, dict))
+        if isinstance(data, dict):
+            store_data(data,group)
+            logging.info(f'add in {group}')
+            In = intresting_url(url = url)
+            In.save()
+        elif data != 'structure data':
+            In = unintresting_url(url = url)
+            In.save()
+def iterate_link(links,group):
+    for url in links:
+        data = get_ld_json2(url)
+        if isinstance(data, dict):
+            store_data(data,group)
+            logging.info(f'add in {group}')
+            In = intresting_url(url = url)
+            In.save()
+
+
 
 
 
